@@ -1,0 +1,23 @@
+apiVersion: v1
+entries:
+  stolon-wal-e:
+  - appVersion: 0.11.0
+    created: 2018-09-11T21:07:05.772479073+01:00
+    description: Stolon - PostgreSQL cloud native High Availability.
+    digest: 594976c0e691b29354e8efd2b1bc0f41700498adf042e824f6b7ff4ebb019018
+    engine: gotpl
+    home: https://github.com/sorintlab/stolon
+    icon: https://i.imgur.com/tIW8sAW.png
+    maintainers:
+    - email: rluckie@cisco.com
+      name: rtluckie
+    - email: ipaq.lw@gmail.com
+      name: lwolf
+    name: stolon-wal-e
+    sources:
+    - https://github.com/sorintlab/stolon
+    - https://github.com/lwolf/stolon-chart
+    urls:
+    - stolon-wal-e-0.4.2.tgz
+    version: 0.4.2
+generated: 2018-09-11T21:07:05.77073163+01:00
