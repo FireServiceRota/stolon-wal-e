@@ -1,0 +1,69 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "stolon.fullname" . }}-wal-e-base-backup-cron
+  labels:
+    app: {{ template "stolon.name" . }}
+    chart: {{ template "stolon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  schedule: "0 4 * * *" # run every 24 hours at 4 am
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "stolon.name" . }}
+            release: {{ .Release.Name }}
+            component: stolon-wal-e-base-backup-job
+        spec:
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: statefulset.kubernetes.io/pod-name
+                    operator: In
+                    values:
+                    - {{ .Release.Name }}-stolon-wal-e-keeper-0
+                topologyKey: kubernetes.io/hostname
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: 
+                - "/bin/bash"
+                - "-ec"
+                - >
+                  wal-e backup-push /stolon-data/postgres &&
+                  wal-e delete --confirm retain 5
+              env:
+                - name: WALE_S3_PREFIX
+                  value: {{ .Values.walE.s3Prefix }}
+                - name: WALE_S3_ENDPOINT
+                  value: {{ .Values.walE.s3Endpoint }}
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "walE.awsSecret required" .Values.walE.awsSecret }}
+                      key: aws_access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "walE.waleSecret required" .Values.walE.awsSecret }}
+                      key: aws_secret_access_key
+                - name: PGPASSWORD
+                  value: {{ .Values.superuserPassword | quote }}
+                - name: PGUSER
+                  value: {{ .Values.superuserUsername | quote }}
+                - name: PGHOST
+                  value: {{ template "stolon.fullname" . }}-proxy
+              volumeMounts:
+                - name: data
+                  mountPath: /stolon-data
+          restartPolicy: Never
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: data-{{ .Release.Name }}-{{ .Chart.Name}}-keeper-0

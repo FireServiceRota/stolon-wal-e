@@ -1,5 +1,5 @@
 image:
-  repository: sorintlab/stolon
+  repository: fireservicerota/stolon-wal-e
   tag: v0.11.0-pg10
   pullPolicy: IfNotPresent
 
@@ -48,7 +48,10 @@ store:
 #  endpoints: "http://stolon-consul:8500"
   kubeResourceKind: configmap
 
-pgParameters: {}
+pgParameters:
+  archive_mode: "on"
+  archive_command: "wal-e wal-push %p"
+
 
 ports:
   stolon:
